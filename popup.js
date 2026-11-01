@@ -188,9 +188,8 @@ el.joinForm.addEventListener('submit', (event) => {
 el.copyBtn.addEventListener('click', async () => {
   const room = formatCode(current?.session?.room);
   if (!room) return;
-  const text = `Join me on Listen Along — room code: ${room}\n(YouTube & Radio Garden sync extension)`;
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(room);
     el.copyBtn.textContent = 'Copied ✓';
     setTimeout(() => {
       el.copyBtn.textContent = 'Copy invite';
