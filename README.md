@@ -49,7 +49,7 @@ Notes:
   shows the live status.
 - If the listener's browser blocks autoplay, a **Tap to resume playback** button
   (YouTube) or **Tap to start the radio** button (Radio Garden) appears on the
-  page.
+  page. Clicking anywhere on the page also starts playback.
 - The room code is the only secret. Anyone with the code and the extension can
   join, so share it privately.
 
@@ -123,9 +123,9 @@ unpacked ignores them.
   visiting another video snaps back.
 - Radio Garden stations are live streams: they cannot be seeked, and resuming
   after a pause joins the broadcast at the live edge.
-- On Radio Garden the listener changes station by page navigation, so a change
-  reloads the tab and may need one tap before audio starts (browsers block
-  autoplay until the page has been interacted with).
+- On Radio Garden, station changes go through the page's own list when the
+  station is listed, which keeps playback running. Otherwise the listener's tab
+  reloads to the station and browsers may require one click before audio starts.
 
 ## Troubleshooting
 

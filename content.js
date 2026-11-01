@@ -522,6 +522,23 @@ function ensureUI() {
     safePlay();
   });
 
+  // Autoplay needs a real gesture; any click on the page counts. Start the
+  // host's video on the first one instead of requiring the tap button.
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      // The player and its controls toggle playback on a real click; doing the
+      // same on pointerdown would make that click immediately undo it.
+      if (event.target?.closest?.('.la-root, #movie_player, .html5-video-player')) return;
+      if (S.role !== 'listener' || !S.remote || S.remote.paused || S.away) return;
+      if (!S.video?.paused || isApplying()) return;
+      markApplying(2500);
+      hideTapToSync();
+      safePlay();
+    },
+    true,
+  );
+
   S.ui = ui;
   renderUI();
 }

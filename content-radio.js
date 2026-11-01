@@ -25,6 +25,7 @@ const S = {
   applyingUntil: 0,
   blockedUntil: 0,
   navigatingUntil: 0,
+  stationChangedAt: 0,
   lastPressAt: 0,
   requestAt: 0,
   hostSendTimer: 0,
@@ -89,12 +90,16 @@ function sendFullState() {
     send({t: 'away'});
     return;
   }
+  // A freshly tuned station buffers before it plays, while the previous player
+  // has already paused. Report "playing" during that window so listeners start
+  // the new station instead of sitting paused waiting for it.
+  const switching = S.stationChangedAt > 0 && now() - S.stationChangedAt < 5000;
   send({
     t: 'state',
     site: SITE,
     s: path,
     title: stationTitle(),
-    paused: mediaPaused(),
+    paused: switching ? false : mediaPaused(),
     at: Date.now(),
   });
 }
@@ -211,6 +216,14 @@ function onPeerMessage(data) {
   renderUI();
 }
 
+function findStationLink(path) {
+  for (const link of document.querySelectorAll('a[data-jest-href], a[href]')) {
+    const href = link.getAttribute('data-jest-href') || link.getAttribute('href');
+    if (href === path) return link;
+  }
+  return null;
+}
+
 function maybeNavigate(path) {
   if (S.role !== 'listener' || !path) return;
   if (!LISTEN_PATH.test(path)) return;
@@ -218,6 +231,22 @@ function maybeNavigate(path) {
   if (currentStation() === path) return;
 
   S.navigatingUntil = Date.now() + 12_000;
+
+  // If the station is already rendered (the place drawer), clicking its row
+  // switches in place. That keeps this document's user activation, so playback
+  // can start without the autoplay prompt that a reload would force.
+  const link = findStationLink(path);
+  if (link) {
+    markApplying(4000);
+    link.click();
+    setTimeout(() => {
+      if (S.role !== 'listener' || !S.remote) return;
+      if (S.remote.s !== path || currentStation() === path) return;
+      location.assign(path);
+    }, 2500);
+    return;
+  }
+
   location.assign(path);
 }
 
@@ -237,6 +266,17 @@ function playBarButton(label) {
   return bar.querySelector(`button[aria-label="${label}" i]`);
 }
 
+// If a press does not produce audio (autoplay still blocked), stop retrying for
+// a while so the tap affordance can show steadily instead of flickering.
+function scheduleStartCheck() {
+  setTimeout(() => {
+    if (S.role !== 'listener' || !S.remote || S.remote.paused) return;
+    if (S.media && !S.media.paused) return;
+    S.blockedUntil = Date.now() + 8000;
+    updatePill();
+  }, 2600);
+}
+
 function pressPlay(force = false) {
   if (S.role !== 'listener' || !S.remote || S.remote.paused) return false;
   if (!force) {
@@ -244,6 +284,7 @@ function pressPlay(force = false) {
     if (Date.now() - S.lastPressAt < 1200) return false;
   }
   S.lastPressAt = Date.now();
+  scheduleStartCheck();
 
   // With a captured element, the bridge can play it directly. Without one the
   // site has never started playback, so use its own play button.
@@ -316,11 +357,13 @@ function onMedia(next) {
 
 function onStation(station) {
   if (!station || !LISTEN_PATH.test(station.path)) return;
-  const changed = S.station?.path !== station.path;
+  const previousPath = S.station?.path;
+  const changed = previousPath !== station.path;
   S.station = station;
 
   if (changed) {
     if (S.role === 'host') {
+      if (previousPath) S.stationChangedAt = now();
       queueHostState(60);
     } else if (S.role === 'listener' && S.remote && S.remote.s !== station.path) {
       // The listener picked another station; snap back to the host's station.
@@ -540,6 +583,26 @@ function tick() {
 
 setInterval(tick, 700);
 
+// Autoplay needs a real gesture. Any click on the page counts, so start the
+// host's station on the first one instead of making the user hunt for a button.
+document.addEventListener(
+  'pointerdown',
+  (event) => {
+    // Leave the site's own controls alone: a real click there already toggles
+    // playback, and pressing first would make that click undo it.
+    if (event.target?.closest?.('.la-root, [data-jest-id="playBar"], a[data-jest-href^="/listen/"]')) {
+      return;
+    }
+    if (S.role !== 'listener' || !S.remote || S.remote.paused || S.conflict) return;
+    if (S.media && !S.media.paused) return;
+    S.blockedUntil = 0;
+    S.lastPressAt = 0;
+    markApplying(3000);
+    pressPlay(true);
+  },
+  true,
+);
+
 // Radio Garden can swap stations in-place. When that happens through the URL,
 // follow it immediately; the channel metadata only fills in the title later.
 let lastPath = location.pathname;
@@ -549,7 +612,10 @@ setInterval(() => {
   if (!LISTEN_PATH.test(lastPath)) return;
   if (S.station?.path === lastPath) return;
   S.station = {path: lastPath, id: '', title: stationTitle()};
-  if (S.role === 'host') queueHostState(60);
+  if (S.role === 'host') {
+    S.stationChangedAt = now();
+    queueHostState(60);
+  }
   updatePill();
 }, 1000);
 

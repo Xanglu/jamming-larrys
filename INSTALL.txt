@@ -34,8 +34,9 @@ RADIO GARDEN NOTES
 ------------------
 - Radio Garden is live radio: there is no seeking, and resuming after a pause
   joins the broadcast at its live edge.
-- Changing station reloads the listener's tab, and the browser may require one
-  tap on "Tap to start the radio" before audio begins.
+- Station changes try to switch in place. When the tab has to reload, the
+  browser may require one click — on "Tap to start the radio" or anywhere on
+  the page — before audio begins.
 - Leave the station playing on the host tab; the pill shows the connection.
 
 TROUBLESHOOTING
@@ -45,5 +46,5 @@ TROUBLESHOOTING
 - "Direct connection failed": one side is likely behind a strict NAT, VPN or
   corporate firewall that blocks WebRTC. A TURN server is required there.
 - Listener audio blocked: click "Tap to resume playback" (YouTube) or "Tap to
-  start the radio" (Radio Garden) on the page.
+  start the radio" (Radio Garden) on the page, or click anywhere on the page.
 - Ads on the listener can cause a brief jump; sync corrects itself afterwards.

@@ -1,6 +1,6 @@
 {
   "name": "listen-along",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Chrome extension that syncs YouTube and Radio Garden playback between two people over a direct WebRTC connection.",
   "scripts": {

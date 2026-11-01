@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Listen Along — YouTube & Radio Garden",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Keep YouTube or Radio Garden playback in sync with a friend. One person hosts, everyone follows. No accounts, no server.",
   "minimum_chrome_version": "116",
   "permissions": ["storage", "offscreen", "alarms", "tabs"],
