@@ -33,7 +33,7 @@ Chrome 116 or newer is required (offscreen documents + `chrome.runtime.getContex
 1. The host opens a YouTube video or tunes a Radio Garden station, clicks the
    extension icon, then **Host**. A six-character room code appears.
 2. The listener clicks the extension icon, then **Listen**, and enters that code.
-3. When the pill in the bottom-left corner says **in sync**, the host's play,
+3. When the pill in the top-right corner says **in sync**, the host's play,
    pause, seek, speed, video and station changes are mirrored automatically.
 
 The listener cannot fight the host's playback: pausing, seeking, changing the

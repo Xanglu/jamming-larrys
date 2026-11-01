@@ -490,7 +490,7 @@ function tick() {
 function ensureUI() {
   if (S.ui) return;
   const root = document.createElement('div');
-  root.className = 'la-root';
+  root.className = 'la-root la-site-yt';
   root.innerHTML = `
     <div class="la-toast" role="status"></div>
     <button class="la-sync" type="button" hidden>Tap to resume playback</button>

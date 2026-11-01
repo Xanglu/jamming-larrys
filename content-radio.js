@@ -339,7 +339,7 @@ function onStation(station) {
 function ensureUI() {
   if (S.ui) return;
   const root = document.createElement('div');
-  root.className = 'la-root';
+  root.className = 'la-root la-site-rg';
   root.innerHTML = `
     <div class="la-toast" role="status"></div>
     <button class="la-sync" type="button" hidden>Tap to start the radio</button>

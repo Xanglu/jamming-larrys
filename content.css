@@ -1,16 +1,21 @@
-/* Overlay shown on YouTube pages while a Listen Along session is active. */
+/* Overlay shown on YouTube and Radio Garden pages while a session is active. */
 
 .la-root {
   position: fixed;
-  left: 16px;
-  bottom: 16px;
+  top: 16px;
+  right: 16px;
   z-index: 2147483000;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 8px;
   pointer-events: none;
   font-family: 'YouTube Sans', Roboto, system-ui, -apple-system, sans-serif;
+}
+
+/* Keep the pill clear of YouTube's masthead and account controls. */
+.la-root.la-site-yt {
+  top: 72px;
 }
 
 .la-pill {
