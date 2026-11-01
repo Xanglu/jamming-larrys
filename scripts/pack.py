@@ -20,6 +20,8 @@ ALWAYS = [
     "manifest.json",
     "background.js",
     "content.js",
+    "content-radio.js",
+    "rg-bridge.js",
     "content.css",
     "offscreen.html",
     "offscreen.js",

@@ -1,8 +1,8 @@
-Listen Along — YouTube Sync
-===========================
+Listen Along — YouTube & Radio Garden
+=====================================
 
-A Chrome extension that keeps YouTube playback in sync between two people.
-One person hosts; everyone else follows. No accounts, no server.
+A Chrome extension that keeps YouTube or Radio Garden playback in sync between
+two people. One person hosts; everyone else follows. No accounts, no server.
 
 INSTALL
 -------
@@ -17,13 +17,26 @@ Requires Chrome 116 or newer (or a Chromium-based browser such as Edge/Brave).
 
 USE
 ---
-1. Both of you open YouTube (any video) and click the extension icon.
-2. One person clicks "Host". A six-character room code appears.
+1. Both of you open the same site: a YouTube video, or a Radio Garden station.
+2. One person clicks the extension icon and then "Host". A six-character room
+   code appears.
 3. The other person clicks "Listen", types the code, and presses Join.
-4. When the status pill says "in sync", the host's play, pause, seek, speed and
-   video changes are mirrored automatically.
+4. When the status pill says "in sync", the host's play, pause, seek, speed,
+   video and station changes are mirrored automatically.
+
+Both people must use the same site: YouTube for video, Radio Garden for radio.
+A listener on the other site is told which site the host is on instead of
+trying to sync.
 
 Share the room code privately: anyone with the code and this extension can join.
+
+RADIO GARDEN NOTES
+------------------
+- Radio Garden is live radio: there is no seeking, and resuming after a pause
+  joins the broadcast at its live edge.
+- Changing station reloads the listener's tab, and the browser may require one
+  tap on "Tap to start the radio" before audio begins.
+- Leave the station playing on the host tab; the pill shows the connection.
 
 TROUBLESHOOTING
 ---------------
@@ -31,5 +44,6 @@ TROUBLESHOOTING
   or try a different network.
 - "Direct connection failed": one side is likely behind a strict NAT, VPN or
   corporate firewall that blocks WebRTC. A TURN server is required there.
-- Listener audio blocked: click "Tap to resume playback" on the YouTube page.
+- Listener audio blocked: click "Tap to resume playback" (YouTube) or "Tap to
+  start the radio" (Radio Garden) on the page.
 - Ads on the listener can cause a brief jump; sync corrects itself afterwards.

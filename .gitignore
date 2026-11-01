@@ -9,3 +9,6 @@ dist/
 Thumbs.db
 *.log
 .env
+
+# Local test profiles
+.tmp/

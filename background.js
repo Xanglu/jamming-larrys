@@ -1,12 +1,12 @@
 'use strict';
 
-// The service worker is a dumb router: the popup and the YouTube content script
+// The service worker is a dumb router: the popup and the page content scripts
 // never talk to each other directly, and the actual WebRTC connection lives in
 // an offscreen document (service workers in MV3 cannot use RTCPeerConnection).
 
 const APP_ID = 'listen-along-yt-v1-7d41c9';
 const OFFSCREEN_URL = 'offscreen.html';
-const YOUTUBE_URLS = ['https://www.youtube.com/*'];
+const PAGE_URLS = ['https://www.youtube.com/*', 'https://radio.garden/*'];
 const WATCHDOG_ALARM = 'listen-along-watchdog';
 
 const EMPTY_STATE = {
@@ -41,10 +41,10 @@ function notifyPopups(state) {
 
 async function notifyTabs(payload) {
   try {
-    const tabs = await chrome.tabs.query({url: YOUTUBE_URLS});
+    const tabs = await chrome.tabs.query({url: PAGE_URLS});
     await Promise.all(
       tabs.map((tab) =>
-        chrome.tabs.sendMessage(tab.id, {target: 'yt', ...payload}).catch(() => {}),
+        chrome.tabs.sendMessage(tab.id, {target: 'page', ...payload}).catch(() => {}),
       ),
     );
   } catch {
@@ -71,7 +71,7 @@ async function ensureOffscreen() {
         url: OFFSCREEN_URL,
         reasons: ['WEB_RTC', 'AUDIO_PLAYBACK'],
         justification:
-          'Holds the peer-to-peer WebRTC connection used to sync YouTube playback.',
+          'Holds the peer-to-peer WebRTC connection used to sync YouTube and Radio Garden playback.',
       })
       .finally(() => {
         creatingOffscreen = null;
@@ -221,7 +221,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return false;
     }
 
-    // ---- from the YouTube content script -----------------------------------
+    // ---- from a page content script (YouTube or Radio Garden) --------------
     if (msg.type === 'hello') {
       reviveSession()
         .then((state) => {

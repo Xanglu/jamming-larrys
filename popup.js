@@ -115,7 +115,7 @@ function render(state) {
         : 'You are both listeners in this room. Leave and rejoin as the host on one side.';
   } else if (session.role === 'host') {
     el.roleNote.textContent =
-      'Play, pause, seek or switch videos on YouTube — your listener follows. Keep this window open.';
+      'Play, pause or seek on YouTube, or tune stations on Radio Garden — your listener follows. Keep this window open.';
   } else {
     el.roleNote.textContent =
       'Playback is controlled by the host. Keep this window open so the connection stays alive.';
@@ -188,7 +188,7 @@ el.joinForm.addEventListener('submit', (event) => {
 el.copyBtn.addEventListener('click', async () => {
   const room = formatCode(current?.session?.room);
   if (!room) return;
-  const text = `Join me on Listen Along — room code: ${room}\n(YouTube sync extension)`;
+  const text = `Join me on Listen Along — room code: ${room}\n(YouTube & Radio Garden sync extension)`;
   try {
     await navigator.clipboard.writeText(text);
     el.copyBtn.textContent = 'Copied ✓';

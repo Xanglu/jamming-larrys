@@ -1,9 +1,9 @@
-# Listen Along — YouTube Sync
+# Listen Along — YouTube & Radio Garden
 
-A Chrome extension that keeps two people on the same YouTube video, at the same
-moment, with one person in control. No accounts, no sign-in, no server of your
-own: the two browsers find each other through public relays and then talk
-directly over an encrypted WebRTC data channel.
+A Chrome extension that keeps two people on the same YouTube video — or tuned to
+the same live Radio Garden station — with one person in control. No accounts, no
+sign-in, no server of your own: the two browsers find each other through public
+relays and then talk directly over an encrypted WebRTC data channel.
 
 ```
 Host browser  ──┐                        ┌── Listener browser
@@ -13,7 +13,7 @@ Host browser  ──┐                        ┌── Listener browser
                 └────────┬───────────────┘
                          │
                 direct WebRTC data channel
-                (play / pause / seek / rate / video id)
+                (play / pause / seek / rate / video id / station)
 ```
 
 Playback state never passes through a third party. The relay only exchanges the
@@ -30,24 +30,26 @@ Chrome 116 or newer is required (offscreen documents + `chrome.runtime.getContex
 
 ## Use
 
-1. The host opens a YouTube video and clicks the extension icon, then **Host**.
-   A six-character room code appears.
+1. The host opens a YouTube video or tunes a Radio Garden station, clicks the
+   extension icon, then **Host**. A six-character room code appears.
 2. The listener clicks the extension icon, then **Listen**, and enters that code.
 3. When the pill in the bottom-left corner says **in sync**, the host's play,
-   pause, seek, speed and video changes are mirrored automatically.
+   pause, seek, speed, video and station changes are mirrored automatically.
 
-The listener cannot fight the host's playback: pausing, seeking or changing the
-speed is reverted (with a small toast), and playing a different video snaps back
-to the host's video.
+The listener cannot fight the host's playback: pausing, seeking, changing the
+speed or picking another radio station is reverted (with a small toast), and
+playing a different video snaps back to the host's video.
 
 Notes:
 
-- Both people need a YouTube tab open. The listener's tab can be in the
-  background.
+- Both people should use the same site: YouTube for video sync, Radio Garden for
+  radio. A listener on the other site sees **Host is listening on …** instead of
+  trying to sync. The listener's tab can be in the background.
 - Keep the extension's connection alive by leaving Chrome running; the popup
   shows the live status.
 - If the listener's browser blocks autoplay, a **Tap to resume playback** button
-  appears on the page.
+  (YouTube) or **Tap to start the radio** button (Radio Garden) appears on the
+  page.
 - The room code is the only secret. Anyone with the code and the extension can
   join, so share it privately.
 
@@ -59,6 +61,8 @@ Notes:
 | `background.js` | Service worker. Routes messages between the popup, content scripts and the offscreen document. Keeps a watchdog alarm alive. |
 | `offscreen.html/js` | Owns the WebRTC connection. MV3 service workers cannot use `RTCPeerConnection`, so the peer lives in an offscreen document (reasons: `WEB_RTC`, `AUDIO_PLAYBACK`). |
 | `content.js/css` | Runs on `youtube.com`. Reads the host's `<video>` element, applies the listener's state, corrects drift, enforces host control, renders the status pill. |
+| `content-radio.js/css` | Runs on `radio.garden`. Mirrors the tuned station and play/pause, snaps the listener back to the host's station, renders the same status pill. |
+| `rg-bridge.js` | Runs in the page's own world on `radio.garden` (`"world": "MAIN"`). Radio Garden plays through a detached `new Audio()`, invisible to content scripts, so this bridge captures that element and relays its state over `postMessage`. |
 | `vendor/trystero.bundle.js` | Bundled [Trystero](https://github.com/dmotz/trystero) (Nostr strategy) for serverless peer discovery. |
 
 Sync details:
@@ -71,6 +75,11 @@ Sync details:
   is nudged ±5% to catch up; beyond that it seeks.
 - Video changes are broadcast as a YouTube video id; the listener navigates to
   it. When the host leaves the watch page, listeners are released from control.
+- Radio Garden is live, so its state is the tuned station plus play/pause — there
+  is no position to exchange. The station path (`/listen/<slug>/<id>`) is read
+  from the channel metadata the site requests when it tunes, which also covers
+  playback started from the globe without a URL change. A station change sends
+  the listener to that page; a pause resumes at the live edge.
 
 ## Develop
 
@@ -112,6 +121,11 @@ unpacked ignores them.
   or YouTube Music).
 - The listener follows the host's video. Browsing away from `/watch` is allowed;
   visiting another video snaps back.
+- Radio Garden stations are live streams: they cannot be seeked, and resuming
+  after a pause joins the broadcast at the live edge.
+- On Radio Garden the listener changes station by page navigation, so a change
+  reloads the tab and may need one tap before audio starts (browsers block
+  autoplay until the page has been interacted with).
 
 ## Troubleshooting
 
@@ -119,10 +133,11 @@ unpacked ignores them.
   or reload the extension.
 - **“Role conflict”** — both people chose the same role. One should leave and
   rejoin with the other role.
-- **Connected but not syncing** — make sure both tabs are on `youtube.com/watch`
-  and that the host has pressed play at least once.
+- **Connected but not syncing** — make sure both tabs are on the same site
+  (`youtube.com/watch`, or any `radio.garden` page with a station playing) and
+  that the host has pressed play at least once.
 - **Audio blocked on the listener** — click **Tap to resume playback** on the
-  page.
+  page, or **Tap to start the radio** on Radio Garden.
 
 ## Testing with Chrome DevTools MCP
 

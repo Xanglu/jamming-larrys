@@ -73,6 +73,7 @@ function sendFullState() {
   if (S.role !== 'host' || S.conflict || !S.video || !isWatch()) return;
   send({
     t: 'state',
+    site: 'yt',
     v: currentVideoId(),
     time: S.video.currentTime,
     paused: S.video.paused,
@@ -154,6 +155,14 @@ function onPeerMessage(data) {
   }
 
   if (data.t !== 'state' || S.role !== 'listener' || S.conflict) return;
+
+  // A Radio Garden host has nothing in common with a YouTube listener.
+  if (data.site && data.site !== 'yt') {
+    S.remote = null;
+    S.away = true;
+    renderUI();
+    return;
+  }
 
   const state = {
     v: typeof data.v === 'string' ? data.v : null,
@@ -404,6 +413,7 @@ function onNavigate() {
         if (S.video && isWatch()) {
           send({
             t: 'state',
+            site: 'yt',
             v: currentVideoId(),
             time: S.video.currentTime,
             paused: S.video.paused,
@@ -609,7 +619,7 @@ function hideTapToSync() {
 /* -------------------------------------------------------------- bootstrap -- */
 
 chrome.runtime.onMessage.addListener((msg) => {
-  if (!msg || msg.target !== 'yt') return;
+  if (!msg || msg.target !== 'page') return;
 
   if (msg.type === 'session') {
     applySession(msg.state);
