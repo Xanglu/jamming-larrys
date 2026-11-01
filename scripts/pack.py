@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
-TOP_DIR = "listen-along"
+TOP_DIR = "jamming-larrys"
 
 ALWAYS = [
     "manifest.json",
@@ -71,7 +71,7 @@ def main():
 
     version = manifest["version"]
     DIST.mkdir(exist_ok=True)
-    out = DIST / f"listen-along-v{version}.zip"
+    out = DIST / f"jamming-larrys-v{version}.zip"
 
     with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for name in files:

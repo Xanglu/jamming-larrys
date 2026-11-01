@@ -1,4 +1,4 @@
-# Listen Along — YouTube & Radio Garden
+# Jamming Larrys — YouTube & Radio Garden
 
 A Chrome extension that keeps two people on the same YouTube video — or tuned to
 the same live Radio Garden station — with one person in control. No accounts, no
@@ -89,7 +89,7 @@ npm install         # trystero + esbuild
 npm run build       # rebuild vendor/trystero.bundle.js
 npm run icons       # regenerate icons/ and keepalive.wav (Python + Pillow)
 npm run check       # syntax-check the extension scripts
-npm run pack        # build dist/listen-along-v<version>.zip for sharing
+npm run pack        # build dist/jamming-larrys-v<version>.zip for sharing
 ```
 
 The extension itself has no build step for day-to-day edits: reload it from
@@ -99,7 +99,7 @@ The extension itself has no build step for day-to-day edits: reload it from
 
 `npm run pack` writes a zip containing only the runtime files plus `INSTALL.txt`.
 The recipient unzips it, turns on **Developer mode** in `chrome://extensions`,
-and clicks **Load unpacked** on the unzipped `listen-along` folder. The folder
+and clicks **Load unpacked** on the unzipped `jamming-larrys` folder. The folder
 must stay where it is, because Chrome loads the extension from it on every start.
 
 Unpacked installs get a different extension ID on every machine, but room codes

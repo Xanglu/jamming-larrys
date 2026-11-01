@@ -388,7 +388,7 @@ function ensureUI() {
     <button class="la-sync" type="button" hidden>Tap to start the radio</button>
     <div class="la-pill">
       <span class="la-dot" aria-hidden="true"></span>
-      <span class="la-label">Listen Along</span>
+      <span class="la-label">Jamming Larrys</span>
       <button class="la-leave" type="button" title="Leave the room">Leave</button>
     </div>
   `;
