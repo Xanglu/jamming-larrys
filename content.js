@@ -495,6 +495,7 @@ function ensureUI() {
     <div class="la-toast" role="status"></div>
     <button class="la-sync" type="button" hidden>Tap to resume playback</button>
     <div class="la-pill">
+      <img class="la-mascot" src="${chrome.runtime.getURL('assets/mascot.webp')}" alt="" />
       <span class="la-dot" aria-hidden="true"></span>
       <span class="la-label">Jamming Larrys</span>
       <button class="la-leave" type="button" title="Leave the room">Leave</button>

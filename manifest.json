@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jamming Larrys",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Keep YouTube or Radio Garden playback in sync with a friend. One person hosts, everyone follows. No accounts, no server.",
   "minimum_chrome_version": "116",
   "permissions": ["storage", "offscreen", "alarms", "tabs"],
@@ -46,5 +46,10 @@
       "run_at": "document_idle"
     }
   ],
-  "web_accessible_resources": []
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/mascot.webp"],
+      "matches": ["https://www.youtube.com/*", "https://radio.garden/*"]
+    }
+  ]
 }

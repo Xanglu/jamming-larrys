@@ -29,12 +29,13 @@ ALWAYS = [
     "popup.css",
     "popup.js",
     "keepalive.wav",
+    "assets/mascot.webp",
     "vendor/trystero.bundle.js",
     "INSTALL.txt",
 ]
 
 # Extensions that must exist on disk when referenced from the manifest.
-FILE_SUFFIXES = (".js", ".css", ".html", ".png", ".wav", ".json")
+FILE_SUFFIXES = (".js", ".css", ".html", ".png", ".webp", ".wav", ".json")
 
 
 def manifest_files():

@@ -38,6 +38,14 @@
   user-select: none;
 }
 
+.la-mascot {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex: none;
+  margin-right: -2px;
+}
+
 .la-dot {
   width: 8px;
   height: 8px;
@@ -48,14 +56,14 @@
 }
 
 .la-pill[data-tone='live'] .la-dot {
-  background: #2ee6a8;
-  box-shadow: 0 0 0 3px rgba(46, 230, 168, 0.2);
+  background: #ffd23f;
+  box-shadow: 0 0 0 3px rgba(255, 210, 63, 0.2);
   animation: la-pulse 2.4s ease-in-out infinite;
 }
 
 .la-pill[data-tone='wait'] .la-dot {
-  background: #ffc857;
-  box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.18);
+  background: #ff9f1c;
+  box-shadow: 0 0 0 3px rgba(255, 159, 28, 0.18);
 }
 
 .la-pill[data-tone='error'] {
@@ -118,9 +126,9 @@
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
-  color: #ffffff;
-  background: linear-gradient(135deg, #ff3856, #ff7a3d);
-  box-shadow: 0 8px 24px rgba(255, 56, 86, 0.35);
+  color: #241a00;
+  background: linear-gradient(135deg, #ffd23f, #ff9f1c);
+  box-shadow: 0 8px 24px rgba(255, 190, 40, 0.3);
 }
 
 .la-sync[hidden] {

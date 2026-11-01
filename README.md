@@ -140,6 +140,12 @@ unpacked ignores them.
 - **Audio blocked on the listener** — click **Tap to resume playback** on the
   page, or **Tap to start the radio** on Radio Garden.
 
+## Credits
+
+The mascot is the [JAMMING emote](https://7tv.app/emotes/01HQPADS580002TBKNPGQGFJKC)
+by [Gordon_Ramzes](https://7tv.app/users/01G47W3C98000563NYE7GT9QCG) on 7TV.
+It ships as `assets/mascot.webp` and is baked into the icons by `npm run icons`.
+
 ## Testing with Chrome DevTools MCP
 
 `opencode.json` configures [Chrome DevTools for agents](https://developer.chrome.com/docs/extensions/ai/build-with-ai)
