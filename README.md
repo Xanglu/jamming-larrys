@@ -33,8 +33,9 @@ Chrome 116 or newer is required (offscreen documents + `chrome.runtime.getContex
 1. The host opens a YouTube video or tunes a Radio Garden station, clicks the
    extension icon, then **Host**. A six-character room code appears.
 2. The listener clicks the extension icon, then **Listen**, and enters that code.
-3. When the pill in the top-left corner says **in sync**, the host's play,
-   pause, seek, speed, video and station changes are mirrored automatically.
+3. When the pill says **in sync**, the host's play, pause, seek, speed, video and
+   station changes are mirrored automatically. The pill sits in the bottom-left
+   on YouTube and the top-left on Radio Garden.
 
 The listener cannot fight the host's playback: pausing, seeking, changing the
 speed or picking another radio station is reverted (with a small toast), and

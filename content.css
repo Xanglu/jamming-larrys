@@ -13,9 +13,11 @@
   font-family: 'YouTube Sans', Roboto, system-ui, -apple-system, sans-serif;
 }
 
-/* Keep the pill clear of YouTube's masthead and account controls. */
+/* YouTube keeps the overlay in its familiar bottom-left corner; Radio Garden
+   uses the top-left one, where its player controls are not underneath. */
 .la-root.la-site-yt {
-  top: 72px;
+  top: auto;
+  bottom: 16px;
 }
 
 .la-pill {
