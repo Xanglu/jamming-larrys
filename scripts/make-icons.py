@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Generate the extension icon set and the silent keep-alive WAV.
 
-The icons use the JAMMING 7TV emote (https://7tv.app/emotes/01HQPADS580002TBKNPGQGFJKC)
-on a dark warm background so the yellow mascot stays legible at small sizes.
+The icon art is a LINE sticker of a white dog in sunglasses with a music note
+(assets/icon-art.webp). It sits on the same dark warm gradient tile the project
+has always used, so the white silhouette and the red note stay legible at 16px.
+
+The JAMMING 7TV emote (https://7tv.app/emotes/01HQPADS580002TBKNPGQGFJKC) is
+still what ships inside the extension: the popup logo and the in-page pill
+mascot (assets/mascot.webp). Only the browser/toolbar icon uses this artwork.
 """
 import os
 import struct
@@ -13,16 +18,17 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ICONS = os.path.join(ROOT, "icons")
-MASCOT = os.path.join(ROOT, "assets", "mascot.png")
+ART = os.path.join(ROOT, "assets", "icon-art.webp")
 os.makedirs(ICONS, exist_ok=True)
 
 SIZE = 1024
 BG_START = (36, 28, 8)
 BG_END = (16, 12, 3)
-
-# The emote is 140x80 with music notes in the corners. This square crop keeps
-# the creature's body and hands, dropping the notes.
-CROP = (30, 0, 110, 80)
+CORNER = 0.225
+# How much of the tile the artwork covers. The sticker is drawn almost
+# edge-to-edge, so this is what gives the icon its dark border and keeps the
+# music note clear of the rounded corner.
+FILL = 0.86
 
 
 def gradient(size, start, end):
@@ -46,17 +52,21 @@ def make_icon(master_size):
     md = ImageDraw.Draw(mask)
     md.rounded_rectangle(
         (0, 0, master_size - 1, master_size - 1),
-        radius=int(master_size * 0.225),
+        radius=int(master_size * CORNER),
         fill=255,
     )
 
     icon = Image.new("RGBA", (master_size, master_size), (0, 0, 0, 0))
     icon.paste(base, (0, 0), mask)
 
-    face = Image.open(MASCOT).convert("RGBA").crop(CROP)
-    target = int(master_size * 0.84)
-    face = face.resize((target, target), Image.LANCZOS)
-    icon.alpha_composite(face, ((master_size - target) // 2, (master_size - target) // 2))
+    art = Image.open(ART).convert("RGBA")
+    target = int(master_size * FILL)
+    scale = target / max(art.size)
+    art = art.resize(
+        (max(1, round(art.size[0] * scale)), max(1, round(art.size[1] * scale))),
+        Image.LANCZOS,
+    )
+    icon.alpha_composite(art, ((master_size - art.size[0]) // 2, (master_size - art.size[1]) // 2))
 
     return icon
 

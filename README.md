@@ -144,7 +144,12 @@ unpacked ignores them.
 
 The mascot is the [JAMMING emote](https://7tv.app/emotes/01HQPADS580002TBKNPGQGFJKC)
 by [Gordon_Ramzes](https://7tv.app/users/01G47W3C98000563NYE7GT9QCG) on 7TV.
-It ships as `assets/mascot.webp` and is baked into the icons by `npm run icons`.
+It ships as `assets/mascot.webp` and appears in the popup header and the in-page
+pill.
+
+The toolbar and `chrome://extensions` icon uses a LINE sticker of a dog in
+sunglasses with a music note, saved as `assets/icon-art.webp` and composited onto
+the dark tile by `npm run icons`.
 
 ## Testing with Chrome DevTools MCP
 
