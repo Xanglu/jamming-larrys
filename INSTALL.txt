@@ -1,0 +1,35 @@
+Listen Along — YouTube Sync
+===========================
+
+A Chrome extension that keeps YouTube playback in sync between two people.
+One person hosts; everyone else follows. No accounts, no server.
+
+INSTALL
+-------
+1. Unzip this folder somewhere permanent. Chrome loads the extension from
+   this folder every time it starts, so do not delete or move it afterwards.
+2. Open chrome://extensions in Chrome.
+3. Turn on "Developer mode" in the top-right corner.
+4. Click "Load unpacked" and pick this folder (the one containing manifest.json).
+5. Optional: click the puzzle-piece icon and pin "Listen Along".
+
+Requires Chrome 116 or newer (or a Chromium-based browser such as Edge/Brave).
+
+USE
+---
+1. Both of you open YouTube (any video) and click the extension icon.
+2. One person clicks "Host". A six-character room code appears.
+3. The other person clicks "Listen", types the code, and presses Join.
+4. When the status pill says "in sync", the host's play, pause, seek, speed and
+   video changes are mirrored automatically.
+
+Share the room code privately: anyone with the code and this extension can join.
+
+TROUBLESHOOTING
+---------------
+- Stuck on "Connecting…": the public relay network may be unreachable. Retry,
+  or try a different network.
+- "Direct connection failed": one side is likely behind a strict NAT, VPN or
+  corporate firewall that blocks WebRTC. A TURN server is required there.
+- Listener audio blocked: click "Tap to resume playback" on the YouTube page.
+- Ads on the listener can cause a brief jump; sync corrects itself afterwards.

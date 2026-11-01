@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Listen Along</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">▶</span>
+        <div>
+          <h1>Listen Along</h1>
+          <p>YouTube sync, peer to peer</p>
+        </div>
+      </div>
+      <span class="p2p">P2P</span>
+    </header>
+
+    <main>
+      <section id="idle-view">
+        <div class="cards">
+          <button class="card" id="host-btn" type="button">
+            <span class="card-icon" aria-hidden="true">🎙️</span>
+            <span class="card-title">Host</span>
+            <span class="card-sub">You control playback</span>
+          </button>
+          <button class="card" id="listen-btn" type="button">
+            <span class="card-icon" aria-hidden="true">🎧</span>
+            <span class="card-title">Listen</span>
+            <span class="card-sub">Follow someone else</span>
+          </button>
+        </div>
+
+        <form id="join-form" hidden>
+          <label for="code">Room code</label>
+          <div class="join-row">
+            <input
+              id="code"
+              maxlength="9"
+              placeholder="ABC123"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button id="join-btn" class="primary" type="submit">Join</button>
+          </div>
+          <button id="back-btn" class="link" type="button">Back</button>
+        </form>
+
+        <p class="tip">
+          Open a YouTube video, then connect. Your friend's tab follows your play,
+          pause, seek and video changes automatically.
+        </p>
+      </section>
+
+      <section id="active-view" hidden>
+        <div class="status">
+          <span id="dot" class="dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+
+        <div class="room-row">
+          <div class="room">
+            <span class="room-label">Room</span>
+            <span id="room-code" class="room-code">------</span>
+          </div>
+          <button id="copy-btn" class="ghost small" type="button">Copy invite</button>
+        </div>
+
+        <p id="role-note" class="note"></p>
+        <button id="leave-btn" class="ghost" type="button">Leave room</button>
+      </section>
+
+      <p id="error" class="error" role="alert" hidden></p>
+    </main>
+
+    <footer>Direct WebRTC · no accounts · no server</footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

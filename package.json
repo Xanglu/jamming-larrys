@@ -1,0 +1,19 @@
+{
+  "name": "listen-along",
+  "version": "1.0.2",
+  "private": true,
+  "description": "Chrome extension that syncs YouTube playback between two people over a direct WebRTC connection.",
+  "scripts": {
+    "build": "esbuild src/trystero-entry.js --bundle --format=iife --minify --target=chrome116 --outfile=vendor/trystero.bundle.js",
+    "icons": "python3 scripts/make-icons.py",
+    "pack": "python3 scripts/pack.py",
+    "check": "node --check background.js && node --check content.js && node --check offscreen.js && node --check popup.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "trystero": "^0.26.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

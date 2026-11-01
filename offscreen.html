@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Listen Along sync engine</title>
+  </head>
+  <body>
+    <!-- Silent loop keeps this offscreen document (and the WebRTC connection)
+         alive past Chrome's inactivity timeout. -->
+    <audio id="keepalive" src="keepalive.wav" loop preload="auto"></audio>
+    <script src="vendor/trystero.bundle.js"></script>
+    <script src="offscreen.js"></script>
+  </body>
+</html>
