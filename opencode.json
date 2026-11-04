@@ -6,7 +6,7 @@
         "type": "local",
         "enabled": true,
         "command": [
-          "/mnt/c/Windows/System32/cmd.exe",
+          "cmd.exe",
           "/c",
           "npx",
           "-y",
