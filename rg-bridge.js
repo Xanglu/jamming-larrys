@@ -30,7 +30,7 @@
   ];
 
   let media = null;
-  let lastStationPath = '';
+  let lastStation = null;
 
   function post(message) {
     try {
@@ -93,19 +93,22 @@
     return result;
   };
 
+  function postStation() {
+    if (!lastStation) return;
+    post({kind: 'station', ...lastStation});
+  }
+
   function publishStation(data) {
     if (!data || typeof data !== 'object') return;
     const path = typeof data.url === 'string' ? data.url : '';
     if (!/^\/listen\//.test(path)) return;
-    if (path === lastStationPath) return;
-    lastStationPath = path;
-    post({
-      kind: 'station',
+    lastStation = {
       path,
       id: typeof data.id === 'string' ? data.id : '',
       title: typeof data.title === 'string' ? data.title : '',
       place: data.place && typeof data.place.title === 'string' ? data.place.title : '',
-    });
+    };
+    postStation();
   }
 
   // The station currently playing is not always reflected in the URL (the globe
@@ -179,6 +182,7 @@
       media.pause();
     } else if (data.cmd === 'status') {
       report();
+      postStation();
     }
   });
 

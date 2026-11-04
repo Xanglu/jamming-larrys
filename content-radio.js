@@ -9,6 +9,7 @@
 const SITE = 'rg';
 const LISTEN_PATH = /^\/listen\/[^/]+\/[^/]+/;
 const TAG = 'listen-along-rg';
+const STATION_SWITCH_MS = 8000;
 
 const S = {
   role: null, // 'host' | 'listener'
@@ -51,14 +52,65 @@ function currentStation() {
   return LISTEN_PATH.test(path) ? path : null;
 }
 
-function stationTitle() {
-  if (S.station?.title) return S.station.title;
+function stationId(path = currentStation()) {
+  if (!path) return '';
+  return path.split('/').filter(Boolean).pop() || '';
+}
+
+// Radio Garden's stream URL contains the same channel id as the station path
+// (.../content/listen/<id>/channel.mp3). A captured element for a different id
+// is the previous station and must not be used to control the new one.
+function mediaMatchesStation() {
+  const id = stationId();
+  const src = S.media?.src || '';
+  if (!id || !src.includes('/listen/')) return true;
+  return src.includes(`/${id}/`);
+}
+
+function playBarTitle() {
   const title = document.querySelector('[data-jest-id^="playBarChannelTitle"]');
-  return title?.textContent?.trim() || '';
+  const legacy = title?.textContent?.trim();
+  if (legacy) return legacy;
+
+  // Current Radio Garden has no jest ids. The station name is the first line of
+  // the play bar that contains the play/stop button.
+  const button =
+    playBarButton('play') ||
+    playBarButton('stop') ||
+    playBarButton('pause') ||
+    playBarButton('loading');
+  const bar = button?.closest(
+    '[data-jest-id="playBar"], [class*="mainUI"], [class*="playBar"]',
+  );
+  const line = bar?.innerText?.trim().split(/\n/)[0]?.trim();
+  if (line) return line;
+
+  // Last resort on a station page: Radio Garden – <station name>.
+  return document.title.replace(/^Radio Garden\s*[–-]\s*/, '').trim();
+}
+
+function stationTitle() {
+  return S.station?.title || playBarTitle();
 }
 
 function mediaPaused() {
-  return S.media ? Boolean(S.media.paused) : true;
+  // While a station switch is in flight the old player has already stopped and
+  // the new one is still buffering. That is not a host pause.
+  const switching = S.stationChangedAt > 0 && now() - S.stationChangedAt < STATION_SWITCH_MS;
+  if (switching) return false;
+
+  // Otherwise prefer the site's own play/stop button: it reflects what the host
+  // intends even if the captured element lags behind the UI.
+  if (playBarButton('stop') || playBarButton('pause')) return false;
+  // "loading" is the transport button while the stream buffers; the host has
+  // already asked it to play.
+  if (playBarButton('loading')) return false;
+  if (playBarButton('play')) return true;
+
+  // Before the play bar exists (or on older layouts), fall back to the captured
+  // element.
+  if (!S.media || !mediaMatchesStation()) return true;
+  return Boolean(S.media.paused);
 }
 
 /* --------------------------------------------------------------- messaging -- */
@@ -90,16 +142,12 @@ function sendFullState() {
     send({t: 'away'});
     return;
   }
-  // A freshly tuned station buffers before it plays, while the previous player
-  // has already paused. Report "playing" during that window so listeners start
-  // the new station instead of sitting paused waiting for it.
-  const switching = S.stationChangedAt > 0 && now() - S.stationChangedAt < 5000;
   send({
     t: 'state',
     site: SITE,
     s: path,
     title: stationTitle(),
-    paused: switching ? false : mediaPaused(),
+    paused: mediaPaused(),
     at: Date.now(),
   });
 }
@@ -150,7 +198,7 @@ function applySession(state) {
   }
 
   if (S.role === 'listener' && S.remote?.s && S.remote.s !== currentStation()) {
-    maybeNavigate(S.remote.s);
+    maybeNavigate(S.remote.s, S.remote.title);
   }
 }
 
@@ -207,24 +255,59 @@ function onPeerMessage(data) {
   S.otherSite = false;
 
   if (remote.s && remote.s !== currentStation()) {
-    maybeNavigate(remote.s);
+    maybeNavigate(remote.s, remote.title);
     renderUI();
     return;
   }
 
+  // Already on the host's station; a previous navigation throttle is done.
+  S.navigatingUntil = 0;
   applyRemote();
   renderUI();
 }
 
-function findStationLink(path) {
-  for (const link of document.querySelectorAll('a[data-jest-href], a[href]')) {
-    const href = link.getAttribute('data-jest-href') || link.getAttribute('href');
-    if (href === path) return link;
-  }
-  return null;
+function normalizeStationName(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
 
-function maybeNavigate(path) {
+function findStationLink(path, title) {
+  const id = path.split('/').filter(Boolean).pop() || '';
+  const wantedTitle = normalizeStationName(title);
+  let titleMatch = null;
+
+  // Current Radio Garden renders station rows as href-less `a[role=button]`
+  // elements, so match by station id in the href when present and by the
+  // station name otherwise.
+  const links = document.querySelectorAll(
+    'a[data-jest-href], a[href], a[aria-label], [role="button"][aria-label]',
+  );
+  for (const link of links) {
+    if (link.closest('.la-root')) continue;
+    const href = link.getAttribute('data-jest-href') || link.getAttribute('href') || '';
+    if (href === path) return link;
+    if (href.includes('/listen/') && id && href.includes(`/${id}`)) return link;
+
+    if (!wantedTitle || titleMatch) continue;
+    const label = normalizeStationName(link.getAttribute('aria-label'));
+    const text = normalizeStationName(link.textContent);
+    // Radio Garden appends the place to the accessible name for stations
+    // outside the current place: "Smooth Jazz 24/7 in New York NY".
+    if (
+      label === wantedTitle ||
+      text === wantedTitle ||
+      label.startsWith(`${wantedTitle} in `)
+    ) {
+      titleMatch = link;
+    }
+  }
+
+  return titleMatch;
+}
+
+function maybeNavigate(path, title = '') {
   if (S.role !== 'listener' || !path) return;
   if (!LISTEN_PATH.test(path)) return;
   if (Date.now() < S.navigatingUntil) return;
@@ -235,7 +318,7 @@ function maybeNavigate(path) {
   // If the station is already rendered (the place drawer), clicking its row
   // switches in place. That keeps this document's user activation, so playback
   // can start without the autoplay prompt that a reload would force.
-  const link = findStationLink(path);
+  const link = findStationLink(path, title);
   if (link) {
     markApplying(4000);
     link.click();
@@ -243,7 +326,7 @@ function maybeNavigate(path) {
       if (S.role !== 'listener' || !S.remote) return;
       if (S.remote.s !== path || currentStation() === path) return;
       location.assign(path);
-    }, 2500);
+    }, 5000);
     return;
   }
 
@@ -260,10 +343,33 @@ function sendCommand(cmd) {
   }
 }
 
+function startRadioButton() {
+  const dialog = document.querySelector('[role="dialog"][aria-label="Radio Garden"]');
+  const button = dialog?.querySelector('[role="button"][aria-label="Start Radio Garden"]');
+  if (!button) return null;
+  if (typeof button.checkVisibility === 'function' && !button.checkVisibility()) return null;
+  return button;
+}
+
 function playBarButton(label) {
+  const wanted = String(label || '').trim().toLowerCase();
+  if (!wanted) return null;
+
   const bar = document.querySelector('[data-jest-id="playBar"]');
-  if (!bar) return null;
-  return bar.querySelector(`button[aria-label="${label}" i]`);
+  if (bar) {
+    const button = [...bar.querySelectorAll('button[aria-label]')].find(
+      (candidate) => candidate.getAttribute('aria-label').trim().toLowerCase() === wanted,
+    );
+    if (button) return button;
+  }
+
+  // Current Radio Garden no longer exposes data-jest ids. Its transport uses
+  // the only exact "play"/"stop" button on the page.
+  for (const button of document.querySelectorAll('button[aria-label]')) {
+    if (button.closest('.la-root')) continue;
+    if (button.getAttribute('aria-label').trim().toLowerCase() === wanted) return button;
+  }
+  return null;
 }
 
 // If a press does not produce audio (autoplay still blocked), stop retrying for
@@ -271,7 +377,7 @@ function playBarButton(label) {
 function scheduleStartCheck() {
   setTimeout(() => {
     if (S.role !== 'listener' || !S.remote || S.remote.paused) return;
-    if (S.media && !S.media.paused) return;
+    if (S.media && !S.media.paused && mediaMatchesStation()) return;
     S.blockedUntil = Date.now() + 8000;
     updatePill();
   }, 2600);
@@ -286,17 +392,27 @@ function pressPlay(force = false) {
   S.lastPressAt = Date.now();
   scheduleStartCheck();
 
-  // With a captured element, the bridge can play it directly. Without one the
-  // site has never started playback, so use its own play button.
-  if (S.media) {
-    markApplying(1800);
-    sendCommand('play');
+  // The welcome dialog is the real start control on a fresh tab; the playbar
+  // button underneath it does nothing while the modal is up.
+  const start = startRadioButton();
+  if (start) {
+    markApplying(2500);
+    start.click();
     return true;
   }
-  const button = playBarButton('play');
+
+  // Prefer the site's own control: it always targets the station currently
+  // selected, even if the captured media element belongs to the previous one.
+  // A "loading" transport button also retries starting the stream.
+  const button = playBarButton('play') || playBarButton('loading');
   if (button) {
     markApplying(1800);
     button.click();
+    return true;
+  }
+  if (S.media && mediaMatchesStation()) {
+    markApplying(1800);
+    sendCommand('play');
     return true;
   }
   return false;
@@ -306,25 +422,26 @@ function pressPause() {
   if (Date.now() - S.lastPressAt < 800) return;
   S.lastPressAt = Date.now();
   markApplying(1500);
-  if (S.media) {
-    sendCommand('pause');
+
+  const button = playBarButton('stop') || playBarButton('pause');
+  if (button) {
+    button.click();
     return;
   }
-  const button = playBarButton('stop');
-  if (button) button.click();
+  if (S.media && mediaMatchesStation()) sendCommand('pause');
 }
 
 function applyRemote() {
   if (S.role !== 'listener' || !S.remote || S.conflict) return;
 
   if (S.remote.s && S.remote.s !== currentStation()) {
-    maybeNavigate(S.remote.s);
+    maybeNavigate(S.remote.s, S.remote.title);
     return;
   }
 
   if (S.remote.paused) {
     if (S.media && !S.media.paused && !isApplying()) pressPause();
-  } else if ((!S.media || S.media.paused) && !isApplying()) {
+  } else if ((!S.media || S.media.paused || !mediaMatchesStation()) && !isApplying()) {
     pressPlay();
   }
 }
@@ -333,26 +450,51 @@ function onMedia(next) {
   const previous = S.media;
   S.media = next;
 
-  if (!next.paused) S.blockedUntil = 0;
+  if (!next.paused) {
+    S.blockedUntil = 0;
+    // The new station is actually playing, so the switch no longer needs a
+    // grace period before a real host pause is reported.
+    if (mediaMatchesStation()) S.stationChangedAt = 0;
+  }
 
   if (S.role === 'listener' && S.remote && !S.conflict && !S.away && !S.otherSite) {
+    const switching =
+      S.stationChangedAt > 0 && now() - S.stationChangedAt < STATION_SWITCH_MS;
     if (next.paused && !S.remote.paused && previous && !previous.paused && !isApplying()) {
-      // The listener paused locally; put playback back under host control.
+      // The listener paused locally, or the site stopped the old player as part
+      // of a station switch. Put playback back under host control either way,
+      // but do not toast during the switch itself.
       markApplying(1500);
       pressPlay(true);
-      toast('The host controls playback');
+      if (!switching) toast('The host controls playback');
     } else if (!next.paused && S.remote.paused && !isApplying()) {
       markApplying(1500);
       pressPause();
-      toast('The host has playback paused');
+      if (!switching) toast('The host has playback paused');
     }
   }
 
   if (S.role === 'host' && previous && previous.paused !== next.paused) {
-    queueHostState(60);
+    // Give a station switch a moment to update the station metadata first, so
+    // the old player's pause is not broadcast as a real host pause.
+    queueHostState(300);
   }
 
   updatePill();
+}
+
+// The station row click that got us here may not start audio on its own (the
+// site may wait for a real gesture). Once the new station is known, try once
+// without waiting out the whole applying window.
+function resumeIfNeeded(delay = 250) {
+  setTimeout(() => {
+    if (S.role !== 'listener' || !S.remote || S.remote.paused) return;
+    if (S.conflict || S.away || S.otherSite) return;
+    if (S.remote.s !== currentStation()) return;
+    if (S.media && !S.media.paused && mediaMatchesStation()) return;
+    S.lastPressAt = 0;
+    pressPlay();
+  }, delay);
 }
 
 function onStation(station) {
@@ -362,14 +504,22 @@ function onStation(station) {
   S.station = station;
 
   if (changed) {
+    if (previousPath) S.stationChangedAt = now();
+
     if (S.role === 'host') {
-      if (previousPath) S.stationChangedAt = now();
       queueHostState(60);
-    } else if (S.role === 'listener' && S.remote && S.remote.s !== station.path) {
-      // The listener picked another station; snap back to the host's station.
-      if (!isApplying()) {
-        toast('The host chooses the station');
-        maybeNavigate(S.remote.s);
+    } else if (S.role === 'listener' && S.remote) {
+      if (S.remote.s !== station.path) {
+        // The listener picked another station; snap back to the host's station.
+        if (!isApplying()) {
+          toast('The host chooses the station');
+          maybeNavigate(S.remote.s, S.remote.title);
+        }
+      } else {
+        // We reached the host's station, so the next host change may navigate
+        // immediately instead of waiting out the previous throttle window.
+        S.navigatingUntil = 0;
+        resumeIfNeeded();
       }
     }
   }
@@ -415,9 +565,7 @@ function ensureUI() {
     markApplying(2500);
     // The click is a real user gesture, so driving the site's own button here
     // lets its play() call through the autoplay policy.
-    const button = playBarButton('play');
-    if (button) button.click();
-    else sendCommand('play');
+    pressPlay(true);
   });
 
   S.ui = ui;
@@ -493,7 +641,7 @@ function updatePill() {
     S.role === 'listener' &&
     Boolean(S.remote) &&
     !S.remote.paused &&
-    (!S.media || S.media.paused) &&
+    (!S.media || S.media.paused || !mediaMatchesStation()) &&
     Date.now() - S.lastPressAt > 700;
   if (offerTap) showTapToSync();
   else hideTapToSync();
@@ -571,13 +719,13 @@ function tick() {
 
   const path = currentStation();
   if (S.remote.s && S.remote.s !== path) {
-    maybeNavigate(S.remote.s);
+    maybeNavigate(S.remote.s, S.remote.title);
     return;
   }
 
   if (S.remote.paused) {
     if (S.media && !S.media.paused && !isApplying()) pressPause();
-  } else if ((!S.media || S.media.paused) && !isApplying()) {
+  } else if ((!S.media || S.media.paused || !mediaMatchesStation()) && !isApplying()) {
     pressPlay();
   }
 }
@@ -591,11 +739,18 @@ document.addEventListener(
   (event) => {
     // Leave the site's own controls alone: a real click there already toggles
     // playback, and pressing first would make that click undo it.
-    if (event.target?.closest?.('.la-root, [data-jest-id="playBar"], a[data-jest-href^="/listen/"]')) {
+    if (
+      event.target?.closest?.(
+        '.la-root, [role="dialog"], [data-jest-id="playBar"], ' +
+          'button[aria-label="play" i], button[aria-label="stop" i], ' +
+          'button[aria-label="pause" i], button[aria-label="loading" i], ' +
+          'a[data-jest-href^="/listen/"], a[role="button"][aria-label]',
+      )
+    ) {
       return;
     }
     if (S.role !== 'listener' || !S.remote || S.remote.paused || S.conflict) return;
-    if (S.media && !S.media.paused) return;
+    if (S.media && !S.media.paused && mediaMatchesStation()) return;
     S.blockedUntil = 0;
     S.lastPressAt = 0;
     markApplying(3000);
@@ -612,10 +767,20 @@ setInterval(() => {
   lastPath = location.pathname;
   if (!LISTEN_PATH.test(lastPath)) return;
   if (S.station?.path === lastPath) return;
-  S.station = {path: lastPath, id: '', title: stationTitle()};
+
+  const previousPath = S.station?.path;
+  S.station = {path: lastPath, id: '', title: playBarTitle()};
+  if (previousPath) S.stationChangedAt = now();
+
   if (S.role === 'host') {
-    S.stationChangedAt = now();
     queueHostState(60);
+  } else if (S.role === 'listener' && S.remote) {
+    if (S.remote.s !== lastPath) {
+      if (!isApplying()) maybeNavigate(S.remote.s, S.remote.title);
+    } else {
+      S.navigatingUntil = 0;
+      resumeIfNeeded();
+    }
   }
   updatePill();
 }, 1000);
@@ -629,3 +794,6 @@ post({type: 'hello'})
     if (response?.ok) applySession(response.state);
   })
   .catch(() => {});
+
+// The page may have fetched its channel metadata before this script started.
+sendCommand('status');
